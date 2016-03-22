@@ -1,23 +1,35 @@
-var cornerstoneTools = (function (cornerstone, cornerstoneMath, cornerstoneTools) {
+(function($, cornerstone, cornerstoneMath, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    function getHandleNearImagePoint(element, data, coords) {
-        for (var handle in data.handles) {
-            var handleCanvas = cornerstone.pixelToCanvas(element, data.handles[handle]);
-            var distanceSquared = cornerstoneMath.point.distanceSquared(handleCanvas, coords);
-            if (distanceSquared < 25) {
-                return data.handles[handle];
-            }
+    function getHandleNearImagePoint(element, handles, coords, distanceThreshold) {
+        var nearbyHandle;
+        
+        if (!handles) {
+            return;
         }
+
+        Object.keys(handles).forEach(function(name) {
+            var handle = handles[name];
+            if (handle.hasOwnProperty('pointNearHandle')) {
+                if (handle.pointNearHandle(element, handle, coords)) {
+                    nearbyHandle = handle;
+                    return;
+                }
+            } else {
+                var handleCanvas = cornerstone.pixelToCanvas(element, handle);
+                var distance = cornerstoneMath.point.distance(handleCanvas, coords);
+                if (distance <= distanceThreshold) {
+                    nearbyHandle = handle;
+                    return;
+                }
+            }
+        });
+        
+        return nearbyHandle;
     }
 
     // module exports
     cornerstoneTools.getHandleNearImagePoint = getHandleNearImagePoint;
 
-    return cornerstoneTools;
-}(cornerstone, cornerstoneMath, cornerstoneTools));
+})($, cornerstone, cornerstoneMath, cornerstoneTools);

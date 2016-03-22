@@ -1,12 +1,8 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    var toolType = "playClip";
+    var toolType = 'playClip';
 
     /**
      * Starts playing a clip or adjusts the frame rate of an already playing clip.  framesPerSecond is
@@ -17,8 +13,9 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
      */
     function playClip(element, framesPerSecond) {
         if (element === undefined) {
-            throw "playClip: element must not be undefined";
+            throw 'playClip: element must not be undefined';
         }
+
         if (framesPerSecond === undefined) {
             framesPerSecond = 30;
         }
@@ -27,6 +24,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         if (stackToolData === undefined || stackToolData.data === undefined || stackToolData.data.length === 0) {
             return;
         }
+
         var stackData = stackToolData.data[0];
 
         var playClipToolData = cornerstoneTools.getToolState(element, toolType);
@@ -34,7 +32,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         
         if (playClipToolData === undefined || playClipToolData.data.length === 0) {
             playClipData = {
-                intervalId : undefined,
+                intervalId: undefined,
                 framesPerSecond: framesPerSecond,
                 lastFrameTimeStamp: undefined,
                 frameRate: 0,
@@ -66,7 +64,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                 var eventDetail = {
                     element: element
                 };
-                var event = jQuery.Event("CornerstoneToolsClipStopped", eventDetail);
+                var event = $.Event('CornerstoneToolsClipStopped', eventDetail);
                 $(element).trigger(event, eventDetail);
 
                 clearInterval(playClipData.intervalId);
@@ -80,23 +78,37 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
             }
 
             if (newImageIdIndex < 0) {
-                newImageIdIndex = stackData.imageIds.length -1;
+                newImageIdIndex = stackData.imageIds.length - 1;
             }
 
             if (newImageIdIndex !== stackData.currentImageIdIndex) {
                 var startLoadingHandler = cornerstoneTools.loadHandlerManager.getStartLoadHandler();
-                var endLoadingHandler  = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+                var endLoadingHandler = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+                var errorLoadingHandler = cornerstoneTools.loadHandlerManager.getErrorLoadingHandler();
 
                 if (startLoadingHandler) {
                     startLoadingHandler(element);
                 }
 
                 var viewport = cornerstone.getViewport(element);
-                cornerstone.loadAndCacheImage(stackData.imageIds[newImageIdIndex]).then(function(image) {
+
+                var loader;
+                if (stackData.preventCache === true) {
+                    loader = cornerstone.loadImage(stackData.imageIds[newImageIdIndex]);
+                } else {
+                    loader = cornerstone.loadAndCacheImage(stackData.imageIds[newImageIdIndex]);
+                }
+
+                loader.then(function(image) {
                     stackData.currentImageIdIndex = newImageIdIndex;
                     cornerstone.displayImage(element, image, viewport);
                     if (endLoadingHandler) {
                         endLoadingHandler(element);
+                    }
+                }, function(error) {
+                    var imageId = stackData.imageIds[newImageIdIndex];
+                    if (errorLoadingHandler) {
+                        errorLoadingHandler(element, imageId, error);
                     }
                 });
             }
@@ -107,8 +119,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
      * Stops an already playing clip.
      * * @param element
      */
-    function stopClip(element)
-    {
+    function stopClip(element) {
         var playClipToolData = cornerstoneTools.getToolState(element, toolType);
         var playClipData;
         if (playClipToolData === undefined || playClipToolData.data.length === 0) {
@@ -121,10 +132,8 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         playClipData.intervalId = undefined;
     }
 
-
     // module/private exports
     cornerstoneTools.playClip = playClip;
     cornerstoneTools.stopClip = stopClip;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

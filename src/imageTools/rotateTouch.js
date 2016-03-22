@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     function touchRotateCallback(e, eventData) {
         eventData.viewport.rotation += eventData.rotation;
@@ -13,12 +9,12 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     }
 
     function disable(element) {
-        $(element).off("CornerstoneToolsTouchRotate", touchRotateCallback);
+        $(element).off('CornerstoneToolsTouchRotate', touchRotateCallback);
     }
 
     function activate(element) {
-        $(element).off("CornerstoneToolsTouchRotate", touchRotateCallback);
-        $(element).on("CornerstoneToolsTouchRotate", touchRotateCallback);
+        $(element).off('CornerstoneToolsTouchRotate', touchRotateCallback);
+        $(element).on('CornerstoneToolsTouchRotate', touchRotateCallback);
     }
 
     cornerstoneTools.rotateTouch = {
@@ -26,5 +22,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         disable: disable
     };
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

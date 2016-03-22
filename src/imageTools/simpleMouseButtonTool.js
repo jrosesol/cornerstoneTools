@@ -1,13 +1,8 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    function simpleMouseButtonTool(mouseDownCallback)
-    {
+    function simpleMouseButtonTool(mouseDownCallback) {
         var configuration = {};
 
         var toolInterface = {
@@ -17,18 +12,18 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                     mouseButtonMask: mouseButtonMask,
                     options: options
                 };
-                $(element).on("CornerstoneToolsMouseDownActivate", eventData, mouseDownCallback);
+                $(element).on('CornerstoneToolsMouseDownActivate', eventData, mouseDownCallback);
             },
-            disable : function(element) {$(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);},
-            enable : function(element) {$(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);},
-            deactivate : function(element) {$(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);},
-            getConfiguration : function() { return configuration;},
-            setConfiguration : function(config) {configuration = config;}
+            disable: function(element) {$(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);},
+            enable: function(element) {$(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);},
+            deactivate: function(element) {$(element).off('CornerstoneToolsMouseDownActivate', mouseDownCallback);},
+            getConfiguration: function() { return configuration;},
+            setConfiguration: function(config) {configuration = config;}
         };
         return toolInterface;
     }
 
     // module exports
     cornerstoneTools.simpleMouseButtonTool = simpleMouseButtonTool;
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+
+})($, cornerstone, cornerstoneTools);

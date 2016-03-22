@@ -1,12 +1,8 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTools) {
+(function($, cornerstone, cornerstoneMath, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    var toolType = "angle";
+    var toolType = 'angle';
 
     ///////// BEGIN ACTIVE TOOL ///////
     function createNewMeasurement(mouseEventData) {
@@ -51,9 +47,11 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
             start: cornerstone.pixelToCanvas(element, data.handles.start),
             end: cornerstone.pixelToCanvas(element, data.handles.end)
         };
+        
         var distanceToPoint = cornerstoneMath.lineSegment.distanceToPoint(lineSegment, coords);
-        if (distanceToPoint < 5)
+        if (distanceToPoint < 5) {
             return true;
+        }
 
         lineSegment.start = cornerstone.pixelToCanvas(element, data.handles.start2);
         lineSegment.end = cornerstone.pixelToCanvas(element, data.handles.end2);
@@ -72,16 +70,24 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
         }
 
         // we have tool data for this element - iterate over each one and draw it
-        var context = eventData.canvasContext.canvas.getContext("2d");
+        var context = eventData.canvasContext.canvas.getContext('2d');
         context.setTransform(1, 0, 0, 1, 0, 0);
         
         //activation color 
         var color;
         var lineWidth = cornerstoneTools.toolStyle.getToolWidth();
         var font = cornerstoneTools.textStyle.getFont();
+        var config = cornerstoneTools.angle.getConfiguration();
 
         for (var i = 0; i < toolData.data.length; i++) {
             context.save();
+
+            // configurable shadow
+            if (config && config.shadow) {
+                context.shadowColor = config.shadowColor || '#000000';
+                context.shadowOffsetX = config.shadowOffsetX || 1;
+                context.shadowOffsetY = config.shadowOffsetY || 1;
+            }
 
             var data = toolData.data[i];
 
@@ -127,7 +133,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
             angle = angle * (180 / Math.PI);
 
             var rAngle = cornerstoneTools.roundToDecimal(angle, 2);
-            var str = "00B0"; // degrees symbol
+            var str = '00B0'; // degrees symbol
             var text = rAngle.toString() + String.fromCharCode(parseInt(str, 16));
 
             var textX = (handleStartCanvas.x + handleEndCanvas.x) / 2;
@@ -137,10 +143,8 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
             cornerstoneTools.drawTextBox(context, text, textX, textY, color);
             context.restore();
         }
-
     }
     ///////// END IMAGE RENDERING ///////
-
 
     // module exports
     cornerstoneTools.angle = cornerstoneTools.mouseButtonTool({
@@ -149,12 +153,12 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
         pointNearTool: pointNearTool,
         toolType: toolType
     });
-     cornerstoneTools.angleTouch = cornerstoneTools.touchTool({
+    
+    cornerstoneTools.angleTouch = cornerstoneTools.touchTool({
         createNewMeasurement: createNewMeasurement,
         onImageRendered: onImageRendered,
         pointNearTool: pointNearTool,
         toolType: toolType
     });
 
-    return cornerstoneTools;
-} ($, cornerstone, cornerstoneMath, cornerstoneTools));
+})($, cornerstone, cornerstoneMath, cornerstoneTools);

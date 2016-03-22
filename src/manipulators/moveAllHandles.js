@@ -1,43 +1,45 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTools) {
+(function($, cornerstone, cornerstoneMath, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-
-    function moveAllHandles(e, data, toolData, deleteIfHandleOutsideImage, preventHandleOutsideImage) {
-        var mouseEventData = e;
+    function moveAllHandles(mouseEventData, data, toolData, toolType, options, doneMovingCallback) {
         var element = mouseEventData.element;
 
         function mouseDragCallback(e, eventData) {
             data.active = true;
 
-            for(var property in data.handles) {
-                var handle = data.handles[property];
+            Object.keys(data.handles).forEach(function(name) {
+                var handle = data.handles[name];
+                if (handle.movesIndependently === true) {
+                    return;
+                }
+
                 handle.x += eventData.deltaPoints.image.x;
                 handle.y += eventData.deltaPoints.image.y;
-                if (preventHandleOutsideImage) {
-                    if (handle.x < 0) {
-                        handle.x = 0;
-                    }
-                    if (handle.x > eventData.image.width) {
-                        handle.x = eventData.image.width;
-                    }
-                    if (handle.y < 0) {
-                        handle.y = 0;
-                    }
-                    if (handle.y > eventData.image.height) {
-                        handle.y = eventData.image.height;
-                    }
+                
+                if (options.preventHandleOutsideImage === true) {
+                    handle.x = Math.max(handle.x, 0);
+                    handle.x = Math.min(handle.x, eventData.image.width);
+
+                    handle.y = Math.max(handle.y, 0);
+                    handle.y = Math.min(handle.y, eventData.image.height);
                 }
-            }
+            });
+
             cornerstone.updateImage(element);
+
+            var eventType = 'CornerstoneToolsMeasurementModified';
+            var modifiedEventData = {
+                toolType: toolType,
+                element: element,
+                measurementData: data
+            };
+            $(element).trigger(eventType, modifiedEventData);
+
             return false; // false = causes jquery to preventDefault() and stopPropagation() this event
         }
 
-        $(element).on("CornerstoneToolsMouseDrag", mouseDragCallback);
+        $(element).on('CornerstoneToolsMouseDrag', mouseDragCallback);
 
         function mouseUpCallback(e, eventData) {
             data.active = false;
@@ -45,9 +47,10 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
 
             $(element).off('CornerstoneToolsMouseDrag', mouseDragCallback);
             $(element).off('CornerstoneToolsMouseUp', mouseUpCallback);
+            $(element).off('CornerstoneToolsMouseClick', mouseUpCallback);
 
             // If any handle is outside the image, delete the tool data
-            if (deleteIfHandleOutsideImage === true) {
+            if (options.deleteIfHandleOutsideImage === true) {
                 var image = eventData.image;
                 var handleOutsideImage = false;
                 var rect = {
@@ -56,35 +59,45 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
                     width: image.width,
                     height: image.height
                 };
-                for(var property in data.handles) {
-                    var handle = data.handles[property];
+                
+                Object.keys(data.handles).forEach(function(name) {
+                    var handle = data.handles[name];
                     handle.active = false;
-                    if(cornerstoneMath.point.insideRect(handle, rect) === false) {
+                    if (cornerstoneMath.point.insideRect(handle, rect) === false) {
                         handleOutsideImage = true;
+                        return false;
                     }
-                }
+                });
 
-                if(handleOutsideImage) {
+                if (handleOutsideImage) {
                     // find this tool data
                     var indexOfData = -1;
-                    for(var i = 0; i < toolData.data.length; i++) {
-                        if (toolData.data[i] === data) {
-                            indexOfData = i;
+                    toolData.data.forEach(function(thisToolData, index) {
+                        if (thisToolData === data) {
+                            indexOfData = index;
+                            return false;
                         }
-                    }
-                    if(indexOfData !== -1) {
+                    });
+
+                    if (indexOfData !== -1) {
                         toolData.data.splice(indexOfData, 1);
                     }
                 }
             }
+
             cornerstone.updateImage(element);
+
+            if (typeof doneMovingCallback === 'function') {
+                doneMovingCallback();
+            }
         }
-        $(element).on("CornerstoneToolsMouseUp", mouseUpCallback);
+
+        $(element).on('CornerstoneToolsMouseUp', mouseUpCallback);
+        $(element).on('CornerstoneToolsMouseClick', mouseUpCallback);
         return true;
     }
 
     // module/private exports
     cornerstoneTools.moveAllHandles = moveAllHandles;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneMath, cornerstoneTools));
+})($, cornerstone, cornerstoneMath, cornerstoneTools);

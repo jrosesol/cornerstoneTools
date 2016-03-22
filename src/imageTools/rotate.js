@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     // --- Strategies --- //
     function defaultStrategy(eventData) {
@@ -29,38 +25,36 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         var rotationDegrees = rotationRadians * (180 / Math.PI);
         var rotation = -1 * rotationDegrees + 90;
         eventData.viewport.rotation = rotation;
+        cornerstone.setViewport(eventData.element, eventData.viewport);
     }
 
     function horizontalStrategy(eventData) {
         eventData.viewport.rotation += (eventData.deltaPoints.page.x / eventData.viewport.scale);
+        cornerstone.setViewport(eventData.element, eventData.viewport);
     }
 
     function verticalStrategy(eventData) {
         eventData.viewport.rotation += (eventData.deltaPoints.page.y / eventData.viewport.scale);
+        cornerstone.setViewport(eventData.element, eventData.viewport);
     }
 
     // --- Mouse event callbacks --- //
     function mouseUpCallback(e, eventData) {
-        $(eventData.element).off("CornerstoneToolsMouseDrag", mouseDragCallback);
-        $(eventData.element).off("CornerstoneToolsMouseUp", mouseUpCallback);
+        $(eventData.element).off('CornerstoneToolsMouseDrag', dragCallback);
+        $(eventData.element).off('CornerstoneToolsMouseUp', mouseUpCallback);
+        $(eventData.element).off('CornerstoneToolsMouseClick', mouseUpCallback);
     }
 
     function mouseDownCallback(e, eventData) {
-        if(cornerstoneTools.isMouseButtonEnabled(eventData.which, e.data.mouseButtonMask)) {
-            $(eventData.element).on("CornerstoneToolsMouseDrag", mouseDragCallback);
-            $(eventData.element).on("CornerstoneToolsMouseUp", mouseUpCallback);
+        if (cornerstoneTools.isMouseButtonEnabled(eventData.which, e.data.mouseButtonMask)) {
+            $(eventData.element).on('CornerstoneToolsMouseDrag', dragCallback);
+            $(eventData.element).on('CornerstoneToolsMouseUp', mouseUpCallback);
+            $(eventData.element).on('CornerstoneToolsMouseClick', mouseUpCallback);
             return false; // false = causes jquery to preventDefault() and stopPropagation() this event
         }
     }
 
-    function mouseDragCallback(e, eventData) {
-        cornerstoneTools.rotate.strategy(eventData);
-        cornerstone.setViewport(eventData.element, eventData.viewport);
-        e.stopPropagation();
-        return false; // false = causes jquery to preventDefault() and stopPropagation() this event
-    }
-
-    function onDrag(e, eventData) {
+    function dragCallback(e, eventData) {
         cornerstoneTools.rotate.strategy(eventData);
         cornerstone.setViewport(eventData.element, eventData.viewport);
         return false; // false = causes jquery to preventDefault() and stopPropagation() this event
@@ -68,13 +62,13 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
 
     cornerstoneTools.rotate = cornerstoneTools.simpleMouseButtonTool(mouseDownCallback);
     cornerstoneTools.rotate.strategies = {
-        default : defaultStrategy,
-        horizontal : horizontalStrategy,
-        vertical : verticalStrategy
+        default: defaultStrategy,
+        horizontal: horizontalStrategy,
+        vertical: verticalStrategy
     };
+    
     cornerstoneTools.rotate.strategy = defaultStrategy;
 
-    cornerstoneTools.rotateTouchDrag = cornerstoneTools.touchDragTool(onDrag);
+    cornerstoneTools.rotateTouchDrag = cornerstoneTools.touchDragTool(dragCallback);
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

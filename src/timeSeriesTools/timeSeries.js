@@ -1,15 +1,8 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    var toolType = "timeSeriesScroll";
-
-    function incrementTimePoint(element, timePoints, wrap)
-    {
+    function incrementTimePoint(element, timePoints, wrap) {
         var toolData = cornerstoneTools.getToolState(element, 'timeSeries');
         if (toolData === undefined || toolData.data === undefined || toolData.data.length === 0) {
             return;
@@ -23,13 +16,13 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         // loop around if we go outside the stack
         if (wrap) {
             if (newStackIndex >= timeSeriesData.stacks.length) {
-                newStackIndex =0;
+                newStackIndex = 0;
             }
+
             if (newStackIndex < 0) {
-                newStackIndex = timeSeriesData.stacks.length -1;
+                newStackIndex = timeSeriesData.stacks.length - 1;
             }
-        }
-        else {
+        } else {
             newStackIndex = Math.min(timeSeriesData.stacks.length - 1, newStackIndex);
             newStackIndex = Math.max(0, newStackIndex);
         }
@@ -37,14 +30,23 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         if (newStackIndex !== timeSeriesData.currentStackIndex) {
             var viewport = cornerstone.getViewport(element);
             var newStack = timeSeriesData.stacks[newStackIndex];
+
             var startLoadingHandler = cornerstoneTools.loadHandlerManager.getStartLoadHandler();
-            var endLoadingHandler  = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+            var endLoadingHandler = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+            var errorLoadingHandler = cornerstoneTools.loadHandlerManager.getErrorLoadingHandler();
 
             if (startLoadingHandler) {
                 startLoadingHandler(element);
             }
 
-            cornerstone.loadAndCacheImage(newStack.imageIds[currentImageIdIndex]).then(function(image) {
+            var loader;
+            if (newStack.preventCache === true) {
+                loader = cornerstone.loadImage(newStack.imageIds[currentImageIdIndex]);
+            } else {
+                loader = cornerstone.loadAndCacheImage(newStack.imageIds[currentImageIdIndex]);
+            }
+
+            loader.then(function(image) {
                 if (timeSeriesData.currentImageIdIndex !== currentImageIdIndex) {
                     newStack.currentImageIdIndex = currentImageIdIndex;
                     timeSeriesData.currentStackIndex = newStackIndex;
@@ -53,6 +55,11 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                         endLoadingHandler(element);
                     }
                 }
+            }, function(error) {
+                var imageId = newStack.imageIds[currentImageIdIndex];
+                if (errorLoadingHandler) {
+                    errorLoadingHandler(element, imageId, error);
+                }
             });
         }
     }
@@ -60,5 +67,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module/private exports
     cornerstoneTools.incrementTimePoint = incrementTimePoint;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

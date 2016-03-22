@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function(cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     // This implements an imageId specific tool state management strategy.  This means that
     // measurements data is tied to a specific imageId and only visible for enabled elements
@@ -15,12 +11,32 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
 
         // here we add tool state, this is done by tools as well
         // as modules that restore saved state
+
+        function saveImageIdToolState(imageId) {
+            return toolState[imageId];
+        }
+
+        function restoreImageIdToolState(imageId, imageIdToolState) {
+            toolState[imageId] = imageIdToolState;
+        }
+
+        function saveToolState() {
+            return toolState;
+        }
+
+        function restoreToolState(savedToolState) {
+            toolState = savedToolState;
+        }
+
+        // here we add tool state, this is done by tools as well
+        // as modules that restore saved state
         function addImageIdSpecificToolState(element, toolType, data) {
             var enabledImage = cornerstone.getEnabledElement(element);
             // if we don't have any tool state for this imageId, add an empty object
             if (!enabledImage.image || toolState.hasOwnProperty(enabledImage.image.imageId) === false) {
                 toolState[enabledImage.image.imageId] = {};
             }
+
             var imageIdToolState = toolState[enabledImage.image.imageId];
 
             // if we don't have tool state for this type of tool, add an empty object
@@ -29,6 +45,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                     data: []
                 };
             }
+
             var toolData = imageIdToolState[toolType];
 
             // finally, add this new tool to the state
@@ -43,12 +60,14 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
             if (!enabledImage.image || toolState.hasOwnProperty(enabledImage.image.imageId) === false) {
                 return;
             }
+
             var imageIdToolState = toolState[enabledImage.image.imageId];
 
             // if we don't have tool state for this type of tool, return undefined
             if (imageIdToolState.hasOwnProperty(toolType) === false) {
                 return;
             }
+
             var toolData = imageIdToolState[toolType];
             return toolData;
         }
@@ -59,6 +78,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
             if (!enabledImage.image || toolState.hasOwnProperty(enabledImage.image.imageId) === false) {
                 return;
             }
+
             delete toolState[enabledImage.image.imageId];
         }
 
@@ -66,6 +86,10 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
             get: getImageIdSpecificToolState,
             add: addImageIdSpecificToolState,
             clear: clearImageIdSpecificToolStateManager,
+            saveImageIdToolState: saveImageIdToolState,
+            restoreImageIdToolState: restoreImageIdToolState,
+            saveToolState: saveToolState,
+            restoreToolState: restoreToolState,
             toolState: toolState
         };
         return imageIdToolStateManager;
@@ -79,5 +103,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     cornerstoneTools.newImageIdSpecificToolStateManager = newImageIdSpecificToolStateManager;
     cornerstoneTools.globalImageIdSpecificToolStateManager = globalImageIdSpecificToolStateManager;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})(cornerstone, cornerstoneTools);

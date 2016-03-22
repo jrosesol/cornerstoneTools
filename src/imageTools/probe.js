@@ -1,16 +1,11 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    var toolType = "probe";
+    var toolType = 'probe';
 
     ///////// BEGIN ACTIVE TOOL ///////
-    function createNewMeasurement(mouseEventData)
-    {
+    function createNewMeasurement(mouseEventData) {
         // create the measurement data for this tool with the end handle activated
         var measurementData = {
             visible: true,
@@ -37,19 +32,19 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     function onImageRendered(e, eventData) {
         // if we have no toolData for this element, return immediately as there is nothing to do
         var toolData = cornerstoneTools.getToolState(e.currentTarget, toolType);
-        if (toolData === undefined) {
+        if (!toolData) {
             return;
         }
 
         // we have tool data for this element - iterate over each one and draw it
-        var context = eventData.canvasContext.canvas.getContext("2d");
+        var context = eventData.canvasContext.canvas.getContext('2d');
         context.setTransform(1, 0, 0, 1, 0, 0);
 
         var color;
         var font = cornerstoneTools.textStyle.getFont();
         var fontHeight = cornerstoneTools.textStyle.getFontSize();
 
-        for (var i=0; i < toolData.data.length; i++) {
+        for (var i = 0; i < toolData.data.length; i++) {
 
             context.save();
             var data = toolData.data[i];
@@ -65,13 +60,32 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
 
             var x = Math.round(data.handles.end.x);
             var y = Math.round(data.handles.end.y);
+            var storedPixels;
 
-            var storedPixels = cornerstone.getStoredPixels(eventData.element, x, y, 1, 1);
-            var sp = storedPixels[0];
-            var mo = sp * eventData.image.slope + eventData.image.intercept;
-            var suv = cornerstoneTools.calculateSUV(eventData.image, sp);
+            var text,
+                str;
 
-            // Draw text
+            if (x < 0 || y < 0 || x >= eventData.image.columns || y >= eventData.image.rows) {
+                return;
+            }
+
+            if (eventData.image.color) {
+                text = '' + x + ', ' + y;
+                storedPixels = cornerstoneTools.getRGBPixels(eventData.element, x, y, 1, 1);
+                str = 'R: ' + storedPixels[0] + ' G: ' + storedPixels[1] + ' B: ' + storedPixels[2];
+            } else {
+                storedPixels = cornerstone.getStoredPixels(eventData.element, x, y, 1, 1);
+                var sp = storedPixels[0];
+                var mo = sp * eventData.image.slope + eventData.image.intercept;
+                var suv = cornerstoneTools.calculateSUV(eventData.image, sp);
+
+                // Draw text
+                text = '' + x + ', ' + y;
+                str = 'SP: ' + sp + ' MO: ' + parseFloat(mo.toFixed(3));
+                if (suv) {
+                    str += ' SUV: ' + parseFloat(suv.toFixed(3));
+                }
+            }
 
             var coords = {
                 // translate the x/y away from the cursor
@@ -82,11 +96,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
             
             context.font = font;
             context.fillStyle = color;
-            var text = "" + x + ", " + y;
-            var str = "SP: " + sp + " MO: " + parseFloat(mo.toFixed(3));
-            if (suv) {
-                str += " SUV: " + parseFloat(suv.toFixed(3));
-            }
+
             cornerstoneTools.drawTextBox(context, str, textCoords.x, textCoords.y + fontHeight + 5, color);
             cornerstoneTools.drawTextBox(context, text, textCoords.x, textCoords.y, color);
             context.restore();
@@ -94,13 +104,12 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     }
     ///////// END IMAGE RENDERING ///////
 
-
     // module exports
     cornerstoneTools.probe = cornerstoneTools.mouseButtonTool({
-        createNewMeasurement : createNewMeasurement,
+        createNewMeasurement: createNewMeasurement,
         onImageRendered: onImageRendered,
         pointNearTool: pointNearTool,
-        toolType : toolType
+        toolType: toolType
     });
     cornerstoneTools.probeTouch = cornerstoneTools.touchTool({
         createNewMeasurement: createNewMeasurement,
@@ -109,5 +118,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         toolType: toolType
     });
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

@@ -1,26 +1,45 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    /*jshint newcap: false */
+    function touchDragTool(touchDragCallback, options) {
+        var events = 'CornerstoneToolsTouchDrag';
+        if (options && options.fireOnTouchStart === true) {
+            events += ' CornerstoneToolsTouchStart';
+        }
 
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-
-    function touchDragTool(touchDragCallback)
-    {
         var toolInterface = {
-            activate: function(element, mouseButtonMask) {
-                $(element).off('CornerstoneToolsTouchDrag', touchDragCallback);
-                var eventData = {
-                };
-                $(element).on("CornerstoneToolsTouchDrag", eventData, touchDragCallback);
+            activate: function(element) {
+                $(element).off(events, touchDragCallback);
+
+                if (options && options.eventData) {
+                    $(element).on(events, options.eventData, touchDragCallback);
+                } else {
+                    $(element).on(events, touchDragCallback);
+                }
+
+                if (options && options.activateCallback) {
+                    options.activateCallback(element);
+                }
             },
-            disable : function(element) {$(element).off('CornerstoneToolsTouchDrag', touchDragCallback);},
-            enable : function(element) {$(element).off('CornerstoneToolsTouchDrag', touchDragCallback);},
-            deactivate : function(element) {$(element).off('CornerstoneToolsTouchDrag', touchDragCallback);}
+            disable: function(element) {
+                $(element).off(events, touchDragCallback);
+                if (options && options.disableCallback) {
+                    options.disableCallback(element);
+                }
+            },
+            enable: function(element) {
+                $(element).off(events, touchDragCallback);
+                if (options && options.enableCallback) {
+                    options.enableCallback(element);
+                }
+            },
+            deactivate: function(element) {
+                $(element).off(events, touchDragCallback);
+                if (options && options.deactivateCallback) {
+                    options.deactivateCallback(element);
+                }
+            }
         };
         return toolInterface;
     }
@@ -28,5 +47,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module exports
     cornerstoneTools.touchDragTool = touchDragTool;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

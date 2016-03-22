@@ -1,23 +1,19 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     function displayTool(onImageRendered) {
         var configuration = {};
 
         var toolInterface = {
-            disable : function(element) {$(element).off('CornerstoneImageRendered', onImageRendered);},
-            enable : function(element) {
+            disable: function(element) {$(element).off('CornerstoneImageRendered', onImageRendered);},
+            enable: function(element) {
                 $(element).off('CornerstoneImageRendered', onImageRendered);
                 $(element).on('CornerstoneImageRendered', onImageRendered);
                 cornerstone.updateImage(element);
             },
-            getConfiguration : function() { return configuration; },
-            setConfiguration : function(config) {configuration = config;}
+            getConfiguration: function() { return configuration; },
+            setConfiguration: function(config) {configuration = config;}
         };
 
         return toolInterface;
@@ -26,6 +22,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module exports
     cornerstoneTools.displayTool = displayTool;
 
-    return cornerstoneTools;
-
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

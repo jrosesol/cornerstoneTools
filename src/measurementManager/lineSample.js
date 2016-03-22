@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstoneTools) {
 
-    "use strict";
-
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     // This object manages a collection of measurements
     function LineSampleMeasurement() {
@@ -16,12 +12,11 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         this.set = function(samples) {
             that.samples = samples;
             // fire event
-            $(that).trigger("CornerstoneLineSampleUpdated");
+            $(that).trigger('CornerstoneLineSampleUpdated');
         };
     }
 
     // module/private exports
     cornerstoneTools.LineSampleMeasurement = LineSampleMeasurement;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstoneTools);

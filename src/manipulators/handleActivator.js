@@ -1,50 +1,44 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTools) {
+(function($, cornerstone, cornerstoneMath, cornerstoneTools) {
 
-    "use strict";
-
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    var handleRadius = 6;
-
-    function findHandleNear(element, handles, canvasPoint) {
-        for(var property in handles) {
-            var handle = handles[property];
-            var handleCanvas = cornerstone.pixelToCanvas(element, handle);
-            var distance = cornerstoneMath.point.distance(handleCanvas, canvasPoint);
-            if (distance <= 36) {
-                return handle;
-            }
-        }
-    }
+    'use strict';
 
     function getActiveHandle(handles) {
-        for(var property in handles) {
-            var handle = handles[property];
+        var activeHandle;
+
+        Object.keys(handles).forEach(function(name) {
+            var handle = handles[name];
             if (handle.active === true) {
-                return handle;
+                activeHandle = handle;
+                return;
             }
-        }
+        });
+
+        return activeHandle;
     }
 
-    function handleActivator(element, handles, canvasPoint) {
+    function handleActivator(element, handles, canvasPoint, distanceThreshold) {
+        if (!distanceThreshold) {
+            distanceThreshold = 36;
+        }
+
         var activeHandle = getActiveHandle(handles);
-        var nearbyHandle = findHandleNear(element, handles, canvasPoint);
+        var nearbyHandle = cornerstoneTools.getHandleNearImagePoint(element, handles, canvasPoint, distanceThreshold);
         if (activeHandle !== nearbyHandle) {
             if (nearbyHandle !== undefined) {
                 nearbyHandle.active = true;
             }
+
             if (activeHandle !== undefined) {
                 activeHandle.active = false;
             }
+
             return true;
         }
+
         return false;
     }
 
     // module/private exports
     cornerstoneTools.handleActivator = handleActivator;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneMath, cornerstoneTools));
+})($, cornerstone, cornerstoneMath, cornerstoneTools);

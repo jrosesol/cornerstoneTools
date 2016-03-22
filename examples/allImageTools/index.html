@@ -5,7 +5,7 @@
     <meta name="viewport" content="user-scalable=no, width=device-width, initial-scale=1, maximum-scale=1">
 
     <!-- twitter bootstrap CSS stylesheet - not required by cornerstoneTools -->
-    <link href="//netdna.bootstrapcdn.com/bootstrap/3.1.1/css/bootstrap.min.css" rel="stylesheet">
+    <link href="../bootstrap.min.css" rel="stylesheet">
 
     <link href="../cornerstone.min.css" rel="stylesheet">
 
@@ -38,6 +38,9 @@
                 <a id="highlight" class="list-group-item">Highlight</a>
                 <a id="freehand" class="list-group-item">Freeform ROI</a>
             </ul>
+            <div class="checkbox">
+              <label><input type="checkbox" id="chkshadow">Apply shadow</label>
+            </div>
             <br/>
         </div>
         <div class="col-xs-10">
@@ -125,10 +128,19 @@ is used by our example image loader-->
     var imageId = 'example://1';
     
     var config = {
+        // invert: true,
         minScale: 0.25,
-        maxScale: 20.0
+        maxScale: 20.0,
+        preventZoomOutsideImage: true
     };
+
     cornerstoneTools.zoom.setConfiguration(config);
+
+    $('#chkshadow').on('change', function(){
+      cornerstoneTools.length.setConfiguration({shadow: this.checked});
+      cornerstoneTools.angle.setConfiguration({shadow: this.checked});
+      cornerstone.updateImage(element);
+    });
 
     // image enable the dicomImage element
     cornerstone.enable(element);

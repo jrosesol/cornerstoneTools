@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function(cornerstoneTools) {
 
-    "use strict";
-
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     function toolStyleManager() {
         var defaultWidth = 1,
@@ -13,16 +9,19 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         function setToolWidth(width){
             defaultWidth = width;
         }
+
         function getToolWidth(){
             return defaultWidth;
         }
+
         function setActiveToolWidth(width){
             activeWidth = width;
         }
+
         function getActiveToolWidth(){
             return activeWidth;
         }
-      
+
         var toolStyle = {
             setToolWidth: setToolWidth,
             getToolWidth: getToolWidth,
@@ -36,5 +35,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module/private exports
     cornerstoneTools.toolStyle = toolStyleManager();
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})(cornerstoneTools);

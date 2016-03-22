@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     // This function causes the image in the target stack to be set to the one closest
     // to the image in the source stack by image position
@@ -41,19 +37,32 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         }
 
         var startLoadingHandler = cornerstoneTools.loadHandlerManager.getStartLoadHandler();
-        var endLoadingHandler  = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+        var endLoadingHandler = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+        var errorLoadingHandler = cornerstoneTools.loadHandlerManager.getErrorLoadingHandler();
 
         if (startLoadingHandler) {
             startLoadingHandler(targetElement);
         }
 
         if (newImageIdIndex !== -1) {
-            cornerstone.loadAndCacheImage(stackData.imageIds[newImageIdIndex]).then(function(image) {
+            var loader;
+            if (stackData.preventCache === true) {
+                loader = cornerstone.loadImage(stackData.imageIds[newImageIdIndex]);
+            } else {
+                loader = cornerstone.loadAndCacheImage(stackData.imageIds[newImageIdIndex]);
+            }
+
+            loader.then(function(image) {
                 var viewport = cornerstone.getViewport(targetElement);
                 stackData.currentImageIdIndex = newImageIdIndex;
                 synchronizer.displayImage(targetElement, image, viewport);
                 if (endLoadingHandler) {
                     endLoadingHandler(targetElement);
+                }
+            }, function(error) {
+                var imageId = stackData.imageIds[newImageIdIndex];
+                if (errorLoadingHandler) {
+                    errorLoadingHandler(targetElement, imageId, error);
                 }
             });
         }
@@ -62,5 +71,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module/private exports
     cornerstoneTools.stackImagePositionSynchronizer = stackImagePositionSynchronizer;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

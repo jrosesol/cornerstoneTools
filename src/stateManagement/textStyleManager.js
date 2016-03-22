@@ -1,19 +1,16 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function(cornerstoneTools) {
 
-    "use strict";
-
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     function textStyleManager() {
         var defaultFontSize = 15,
-            defaultFont = defaultFontSize + "px Arial",
-            defaultBackgroundColor = "transparent";
+            defaultFont = defaultFontSize + 'px Arial',
+            defaultBackgroundColor = 'transparent';
 
         function setFont(font) {
             defaultFont = font;
         }
+
         function getFont() {
             return defaultFont;
         }
@@ -21,6 +18,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         function setFontSize(fontSize) {
             defaultFontSize = fontSize;
         }
+
         function getFontSize() {
             return defaultFontSize;
         }
@@ -28,10 +26,11 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         function setBackgroundColor(backgroundColor) {
             defaultBackgroundColor = backgroundColor;
         }
+
         function getBackgroundColor() {
             return defaultBackgroundColor;
         }
-      
+
         var textStyle = {
             setFont: setFont,
             getFont: getFont,
@@ -47,5 +46,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module/private exports
     cornerstoneTools.textStyle = textStyleManager();
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})(cornerstoneTools);

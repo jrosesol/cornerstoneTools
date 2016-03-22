@@ -1,42 +1,48 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function(cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    function toolColorManager() {
+        var defaultColor = 'white',
+            activeColor = 'greenyellow',
+            fillColor = 'transparent';
 
-    function toolColorManager(){
-        var defaultColor = "white",
-            activeColor = "greenyellow",
-            fillColor = "transparent";
-
-        function setFillColor(color){
+        function setFillColor(color) {
             fillColor = color;
         }
-        function getFillColor(){
+
+        function getFillColor() {
             return fillColor;
         }
-        function setToolColor(color){
+
+        function setToolColor(color) {
             defaultColor = color;
         }
-        function getToolColor(){
+
+        function getToolColor() {
             return defaultColor;
         }
-        function setActiveToolColor(color){
+
+        function setActiveToolColor(color) {
             activeColor = color;
         }
-        function getActiveToolColor(){
+
+        function getActiveToolColor() {
             return activeColor;
         }
-      
+
+        function getColorIfActive(active) {
+            return active ? activeColor : defaultColor;
+        }
+
         var toolColors = {
             setFillColor: setFillColor,
             getFillColor: getFillColor,
             setToolColor: setToolColor,
             getToolColor: getToolColor,
             setActiveColor: setActiveToolColor,
-            getActiveColor: getActiveToolColor
+            getActiveColor: getActiveToolColor,
+            getColorIfActive: getColorIfActive
         };
 
         return toolColors;
@@ -45,5 +51,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module/private exports
     cornerstoneTools.toolColors = toolColorManager();
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})(cornerstoneTools);

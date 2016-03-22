@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     // This function causes the image in the target stack to be set to the one closest
     // to the image in the source stack by image position
@@ -23,7 +19,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         var newImageIdIndex = sourceStackData.currentImageIdIndex;
 
         // clamp the index
-        newImageIdIndex = Math.min(Math.max(newImageIdIndex, 0), targetStackData.imageIds.length -1);
+        newImageIdIndex = Math.min(Math.max(newImageIdIndex, 0), targetStackData.imageIds.length - 1);
 
         // Do nothing if the index has not changed
         if (newImageIdIndex === targetStackData.currentImageIdIndex) {
@@ -31,18 +27,31 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         }
 
         var startLoadingHandler = cornerstoneTools.loadHandlerManager.getStartLoadHandler();
-        var endLoadingHandler  = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+        var endLoadingHandler = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+        var errorLoadingHandler = cornerstoneTools.loadHandlerManager.getErrorLoadingHandler();
 
         if (startLoadingHandler) {
             startLoadingHandler(targetElement);
         }
 
-        cornerstone.loadAndCacheImage(targetStackData.imageIds[newImageIdIndex]).then(function(image) {
+        var loader;
+        if (targetStackData.preventCache === true) {
+            loader = cornerstone.loadImage(targetStackData.imageIds[newImageIdIndex]);
+        } else {
+            loader = cornerstone.loadAndCacheImage(targetStackData.imageIds[newImageIdIndex]);
+        }
+
+        loader.then(function(image) {
             var viewport = cornerstone.getViewport(targetElement);
             targetStackData.currentImageIdIndex = newImageIdIndex;
             synchronizer.displayImage(targetElement, image, viewport);
             if (endLoadingHandler) {
                 endLoadingHandler(targetElement);
+            }
+        }, function(error) {
+            var imageId = targetStackData.imageIds[newImageIdIndex];
+            if (errorLoadingHandler) {
+                errorLoadingHandler(targetElement, imageId, error);
             }
         });
     }
@@ -50,5 +59,4 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     // module/private exports
     cornerstoneTools.stackImageIndexSynchronizer = stackImageIndexSynchronizer;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

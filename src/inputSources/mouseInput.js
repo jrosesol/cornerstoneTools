@@ -1,28 +1,35 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTools) {
+(function($, cornerstone, cornerstoneMath, cornerstoneTools) {
 
-    "use strict";
+    'use strict';
 
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
+    var isClickEvent;
+    var preventClickTimeout;
+    var clickDelay = 200;
+
+    function preventClickHandler() {
+        isClickEvent = false;
     }
 
     function activateMouseDown(mouseEventDetail) {
-        $(mouseEventDetail.element).trigger("CornerstoneToolsMouseDownActivate", mouseEventDetail);
+        $(mouseEventDetail.element).trigger('CornerstoneToolsMouseDownActivate', mouseEventDetail);
     }
 
     function mouseDoubleClick(e) {
-        var eventData = e.data;
         var element = e.currentTarget;
+        var eventType = 'CornerstoneToolsMouseDoubleClick';
 
         var startPoints = {
             page: cornerstoneMath.point.pageToPoint(e),
             image: cornerstone.pageToPixel(element, e.pageX, e.pageY),
-            client: {x: e.clientX, y: e.clientY}
+            client: {
+                x: e.clientX,
+                y: e.clientY
+            }
         };
         startPoints.canvas = cornerstone.pixelToCanvas(element, startPoints.image);
 
         var lastPoints = cornerstoneTools.copyPoints(startPoints);
-        var mouseEventDetail = {
+        var eventData = {
             event: e,
             which: e.which,
             viewport: cornerstone.getViewport(element),
@@ -31,43 +38,59 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
             startPoints: startPoints,
             lastPoints: lastPoints,
             currentPoints: startPoints,
-            deltaPoints: {x: 0, y:0}
+            deltaPoints: {
+                x: 0,
+                y: 0
+            },
+            type: eventType
         };
 
-        var event = jQuery.Event("CornerstoneToolsMouseDoubleClick", mouseEventDetail);
-        $(mouseEventDetail.element).trigger(event, mouseEventDetail);
+        var event = $.Event(eventType, eventData);
+        $(eventData.element).trigger(event, eventData);
     }
 
     function mouseDown(e) {
-        var eventData = e.data;
+        preventClickTimeout = setTimeout(preventClickHandler, clickDelay);
+
         var element = e.currentTarget;
+        var eventType = 'CornerstoneToolsMouseDown';
+
+        // Prevent CornerstoneToolsMouseMove while mouse is down
+        $(element).off('mousemove', mouseMove);
 
         var startPoints = {
             page: cornerstoneMath.point.pageToPoint(e),
             image: cornerstone.pageToPixel(element, e.pageX, e.pageY),
-            client: {x: e.clientX, y: e.clientY}
+            client: {
+                x: e.clientX,
+                y: e.clientY
+            }
         };
         startPoints.canvas = cornerstone.pixelToCanvas(element, startPoints.image);
 
         var lastPoints = cornerstoneTools.copyPoints(startPoints);
-        var mouseEventDetail = {
-                event: e,
-                which: e.which,
-                viewport: cornerstone.getViewport(element),
-                image: cornerstone.getEnabledElement(element).image,
-                element: element,
-                startPoints: startPoints,
-                lastPoints: lastPoints,
-                currentPoints: startPoints,
-                deltaPoints: {x: 0, y:0}
-            };
+        var eventData = {
+            event: e,
+            which: e.which,
+            viewport: cornerstone.getViewport(element),
+            image: cornerstone.getEnabledElement(element).image,
+            element: element,
+            startPoints: startPoints,
+            lastPoints: lastPoints,
+            currentPoints: startPoints,
+            deltaPoints: {
+                x: 0,
+                y: 0
+            },
+            type: eventType
+        };
 
-        var event = jQuery.Event("CornerstoneToolsMouseDown", mouseEventDetail);
-        $(mouseEventDetail.element).trigger(event, mouseEventDetail);
+        var event = $.Event(eventType, eventData);
+        $(eventData.element).trigger(event, eventData);
 
         if (event.isImmediatePropagationStopped() === false) {
             // no tools responded to this event, give the active tool a chance
-            if (activateMouseDown(mouseEventDetail) === true) {
+            if (activateMouseDown(eventData) === true) {
                 return cornerstoneTools.pauseEvent(e);
             }
         }
@@ -76,10 +99,14 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
 
         function onMouseMove(e) {
             // calculate our current points in page and image coordinates
+            var eventType = 'CornerstoneToolsMouseDrag';
             var currentPoints = {
                 page: cornerstoneMath.point.pageToPoint(e),
                 image: cornerstone.pageToPixel(element, e.pageX, e.pageY),
-                client: {x: e.clientX, y: e.clientY}
+                client: {
+                    x: e.clientX,
+                    y: e.clientY
+                }
             };
             currentPoints.canvas = cornerstone.pixelToCanvas(element, currentPoints.image);
 
@@ -99,13 +126,11 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
                 startPoints: startPoints,
                 lastPoints: lastPoints,
                 currentPoints: currentPoints,
-                deltaPoints: deltaPoints
-             };
+                deltaPoints: deltaPoints,
+                type: eventType
+            };
 
-            //element.dispatchEvent(event);
-
-            $(mouseEventDetail.element).trigger("CornerstoneToolsMouseDrag", eventData);
-
+            $(eventData.element).trigger(eventType, eventData);
 
             // update the last points
             lastPoints = cornerstoneTools.copyPoints(currentPoints);
@@ -117,12 +142,22 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
         // hook mouseup so we can unbind our event listeners
         // when they stop dragging
         function onMouseUp(e) {
+            // Cancel the timeout preventing the click event from triggering
+            clearTimeout(preventClickTimeout);
+
+            var eventType = 'CornerstoneToolsMouseUp';
+            if (isClickEvent) {
+                eventType = 'CornerstoneToolsMouseClick';
+            }
 
             // calculate our current points in page and image coordinates
             var currentPoints = {
                 page: cornerstoneMath.point.pageToPoint(e),
                 image: cornerstone.pageToPixel(element, e.pageX, e.pageY),
-                client: {x: e.clientX, y: e.clientY}
+                client: {
+                    x: e.clientX,
+                    y: e.clientY
+                }
             };
             currentPoints.canvas = cornerstone.pixelToCanvas(element, currentPoints.image);
 
@@ -143,32 +178,38 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
                 startPoints: startPoints,
                 lastPoints: lastPoints,
                 currentPoints: currentPoints,
-                deltaPoints: deltaPoints
+                deltaPoints: deltaPoints,
+                type: eventType
             };
-            //element.dispatchEvent(event);
 
-            var event = jQuery.Event("CornerstoneToolsMouseUp", eventData);
-            $(mouseEventDetail.element).trigger(event, eventData);
+            var event = $.Event(eventType, eventData);
+            $(eventData.element).trigger(event, eventData);
 
             $(document).off('mousemove', onMouseMove);
             $(document).off('mouseup', onMouseUp);
+
+            $(eventData.element).on('mousemove', mouseMove);
+
+            isClickEvent = true;
         }
 
-        $(document).on("mousemove", onMouseMove);
-        $(document).on("mouseup", onMouseUp);
-
+        $(document).on('mousemove', onMouseMove);
+        $(document).on('mouseup', onMouseUp);
 
         return cornerstoneTools.pauseEvent(e);
     }
 
     function mouseMove(e) {
-        var eventData = e.data;
         var element = e.currentTarget;
+        var eventType = 'CornerstoneToolsMouseMove';
 
         var startPoints = {
             page: cornerstoneMath.point.pageToPoint(e),
             image: cornerstone.pageToPixel(element, e.pageX, e.pageY),
-            client: {x: e.clientX, y: e.clientY}
+            client: {
+                x: e.clientX,
+                y: e.clientY
+            }
         };
         startPoints.canvas = cornerstone.pixelToCanvas(element, startPoints.image);
 
@@ -180,7 +221,10 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
         var currentPoints = {
             page: cornerstoneMath.point.pageToPoint(e),
             image: cornerstone.pageToPixel(element, e.pageX, e.pageY),
-            client: {x: e.clientX, y: e.clientY}
+            client: {
+                x: e.clientX,
+                y: e.clientY
+            }
         };
         currentPoints.canvas = cornerstone.pixelToCanvas(element, currentPoints.image);
 
@@ -192,7 +236,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
             canvas: cornerstoneMath.point.subtract(currentPoints.canvas, lastPoints.canvas)
         };
 
-        var mouseMoveEventData = {
+        var eventData = {
             which: whichMouseButton,
             viewport: cornerstone.getViewport(element),
             image: cornerstone.getEnabledElement(element).image,
@@ -200,32 +244,34 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneMath, cornerstoneTo
             startPoints: startPoints,
             lastPoints: lastPoints,
             currentPoints: currentPoints,
-            deltaPoints: deltaPoints
+            deltaPoints: deltaPoints,
+            type: eventType
         };
-        $(element).trigger("CornerstoneToolsMouseMove", mouseMoveEventData);
+        $(element).trigger(eventType, eventData);
 
         // update the last points
         lastPoints = cornerstoneTools.copyPoints(currentPoints);
     }
 
-    function enable(element)
-    {
-        $(element).on("mousedown", mouseDown);
-        $(element).on("mousemove", mouseMove);
-        $(element).on("dblclick", mouseDoubleClick);
+    function disable(element) {
+        $(element).off('mousedown', mouseDown);
+        $(element).off('mousemove', mouseMove);
+        $(element).off('dblclick', mouseDoubleClick);
     }
 
-    function disable(element) {
-        $(element).off("mousedown", mouseDown);
-        $(element).off("mousemove", mouseMove);
-        $(element).off("dblclick", mouseDoubleClick);
+    function enable(element) {
+        // Prevent handlers from being attached multiple times
+        disable(element);
+        
+        $(element).on('mousedown', mouseDown);
+        $(element).on('mousemove', mouseMove);
+        $(element).on('dblclick', mouseDoubleClick);
     }
 
     // module exports
     cornerstoneTools.mouseInput = {
-        enable : enable,
-        disable : disable
+        enable: enable,
+        disable: disable
     };
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneMath, cornerstoneTools));
+})($, cornerstone, cornerstoneMath, cornerstoneTools);

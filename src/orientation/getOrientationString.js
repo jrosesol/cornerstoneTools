@@ -1,20 +1,12 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function(cornerstoneMath, cornerstoneTools) {
 
-    "use strict";
-
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
-
-    if (cornerstoneTools.orientation === undefined) {
-        cornerstoneTools.orientation = {};
-    }
+    'use strict';
 
     function getOrientationString(vector) {
         // Thanks to David Clunie
         // https://sites.google.com/site/dicomnotes/
 
-        var orientation = "",
+        var orientation = '',
             orientationX = vector.x < 0 ? 'R' : 'L',
             orientationY = vector.y < 0 ? 'A' : 'P',
             orientationZ = vector.z < 0 ? 'F' : 'H';
@@ -22,7 +14,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         // Should probably make this a function vector3.abs
         var abs = new cornerstoneMath.Vector3(Math.abs(vector.x), Math.abs(vector.y), Math.abs(vector.z));
 
-        for (var i=0; i < 3; i++) {
+        for (var i = 0; i < 3; i++) {
             if (abs.x > 0.0001 && abs.x > abs.y && abs.x > abs.z) {
                 orientation += orientationX;
                 abs.x = 0;
@@ -36,11 +28,11 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                 break;
             }
         }
+
         return orientation;
     }
 
     // module/private exports
     cornerstoneTools.orientation.getOrientationString = getOrientationString;
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})(cornerstoneMath, cornerstoneTools);

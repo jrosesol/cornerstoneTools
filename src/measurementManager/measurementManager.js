@@ -1,10 +1,6 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstoneTools) {
 
-    "use strict";
-
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     // This object manages a collection of measurements
     function MeasurementManager() {
@@ -20,7 +16,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                 index: index,
                 measurement: measurement
             };
-            $(that).trigger("CornerstoneMeasurementAdded", eventDetail);
+            $(that).trigger('CornerstoneMeasurementAdded', eventDetail);
         };
 
         this.remove = function(index) {
@@ -31,12 +27,12 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                 index: index,
                 measurement: measurement
             };
-            $(that).trigger("CornerstoneMeasurementRemoved", eventDetail);
+            $(that).trigger('CornerstoneMeasurementRemoved', eventDetail);
         };
 
     }
 
     // module/private exports
     cornerstoneTools.MeasurementManager = new MeasurementManager();
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+
+})($, cornerstoneTools);

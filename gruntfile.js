@@ -10,7 +10,13 @@ module.exports = function(grunt) {
                 ]
             }
         },
-        copy: {
+      version: {
+        // options: {},
+        defaults: {
+          src: ['src/version.js', 'bower.json']
+        }
+      },
+      copy: {
             bower: {
                 src: [
                     'bower_components/jquery/dist/jquery.min.js',
@@ -30,6 +36,7 @@ module.exports = function(grunt) {
         concat: {
             build: {
                 src : [
+                    'src/header.js',
                     'src/inputSources/mouseWheelInput.js',
                     'src/inputSources/mouseInput.js',
                     'src/inputSources/touchInput.js',
@@ -78,12 +85,56 @@ module.exports = function(grunt) {
         jshint: {
             files: [
                 'src/**/*.js'
-            ]
+            ],
+            options: {
+                strict: true,
+                curly: true,
+                eqeqeq: true,
+                immed: true,
+                latedef: 'nofunc',
+                newcap: true,
+                noarg: true,
+                sub: true,
+                undef: true,
+                boss: true,
+                eqnull: true,
+                browser: true,
+                unused: true,
+                funcscope: false,
+                nonbsp: true,
+                nonew: true,
+                forin: true,
+                freeze: true,
+                futurehostile: true,
+                nocomma: true,
+
+                globals: {
+                    console: true,
+                    prompt: true, // only used in the Annotation tool
+                    $: true,
+                    Hammer: true,
+                    cornerstone: true,
+                    cornerstoneMath: true,
+                    cornerstoneTools: true,
+                }
+            }
+        },
+        jscs: {
+            src: [
+                'src/**/*.js'
+            ],
+            options: {
+                config: ".jscsrc",
+                fix: true,
+                esnext: true,
+                verbose: true,
+                requireCurlyBraces: ["if", "for"]
+            }
         },
         watch: {
             scripts: {
                 files: ['src/**/*.js', 'test/*.js'],
-                tasks: ['concat:build', 'concat:dist', 'uglify','jshint']
+                tasks: ['concat:build', 'concat:dist', 'uglify', 'jshint']
             }
         },
 
@@ -91,13 +142,15 @@ module.exports = function(grunt) {
 
     require('load-grunt-tasks')(grunt);
 
-    grunt.registerTask('buildAll', ['copy', 'concat:build', 'concat:dist', 'uglify', 'jshint']);
+    grunt.registerTask('buildAll', ['copy', 'concat:build', 'concat:dist', 'uglify', 'jshint', 'jscs']);
     grunt.registerTask('default', ['clean', 'buildAll']);
 };
 
 
 // Release process:
 //  1) Update version numbers
+//     update version in package.json
+//     grunt version
 //  2) do a build (needed to update dist versions with correct build number)
 //  3) commit changes
 //      git commit -am "Changes...."

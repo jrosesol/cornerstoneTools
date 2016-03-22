@@ -1,13 +1,8 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if (cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     function getOrientationMarkers(element) {
-        var viewport = cornerstone.getViewport(element);
         var enabledElement = cornerstone.getEnabledElement(element);
         var imagePlaneMetaData = cornerstoneTools.metaData.get('imagePlane', enabledElement.image.imageId);
 
@@ -30,7 +25,6 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     }
 
     function getOrientationMarkerPositions(element) {
-        var viewport = cornerstone.getViewport(element);
         var enabledElement = cornerstone.getEnabledElement(element);
         var coords;
 
@@ -77,12 +71,10 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
 
         var coords = getOrientationMarkerPositions(element, markers);
 
-        var context = eventData.canvasContext.canvas.getContext("2d");
+        var context = eventData.canvasContext.canvas.getContext('2d');
         context.setTransform(1, 0, 0, 1, 0, 0);
 
         var color = cornerstoneTools.toolColors.getToolColor();
-        var font = cornerstoneTools.textStyle.getFont();
-        var fontHeight = cornerstoneTools.textStyle.getFontSize();
 
         var textWidths = {
             top: context.measureText(markers.top).width,
@@ -102,9 +94,7 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     }
     ///////// END IMAGE RENDERING ///////
 
-
     // module exports
     cornerstoneTools.orientationMarkers = cornerstoneTools.displayTool(onImageRendered);
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+})($, cornerstone, cornerstoneTools);

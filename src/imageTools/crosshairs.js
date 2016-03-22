@@ -1,17 +1,15 @@
-var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
+(function($, cornerstone, cornerstoneTools) {
 
-    "use strict";
-
-    if(cornerstoneTools === undefined) {
-        cornerstoneTools = {};
-    }
+    'use strict';
 
     var toolType = 'crosshairs';
 
     function chooseLocation(e, eventData) {
+        e.stopImmediatePropagation(); // Prevent CornerstoneToolsTouchStartActive from killing any press events
+        
         // if we have no toolData for this element, return immediately as there is nothing to do
         var toolData = cornerstoneTools.getToolState(e.currentTarget, toolType);
-        if (toolData === undefined) {
+        if (!toolData) {
             return;
         }
 
@@ -37,14 +35,15 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
             if (targetElement === sourceElement) {
                 return; // Same as 'continue' in a normal for loop
             }
+
             var minDistance = Number.MAX_VALUE;
             var newImageIdIndex = -1;
 
             var stackToolDataSource = cornerstoneTools.getToolState(targetElement, 'stack');
             if (stackToolDataSource === undefined) {
-                return;  // Same as 'continue' in a normal for loop
+                return; // Same as 'continue' in a normal for loop
             }
-            
+
             var stackData = stackToolDataSource.data[0];
 
             // Find within the element's stack the closest image plane to selected location
@@ -56,31 +55,44 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
                 var normal = column.clone().cross(row.clone());
                 var distance = Math.abs(normal.clone().dot(imagePosition) - normal.clone().dot(patientPoint));
                 //console.log(index + '=' + distance);
-                if(distance < minDistance) {
+                if (distance < minDistance) {
                     minDistance = distance;
                     newImageIdIndex = index;
                 }
             });
 
-            if(newImageIdIndex === stackData.currentImageIdIndex) {
+            if (newImageIdIndex === stackData.currentImageIdIndex) {
                 return;
             }
 
             // Switch the loaded image to the required image
-            if(newImageIdIndex !== -1 && stackData.imageIds[newImageIdIndex] !== undefined) {
+            if (newImageIdIndex !== -1 && stackData.imageIds[newImageIdIndex] !== undefined) {
                 var startLoadingHandler = cornerstoneTools.loadHandlerManager.getStartLoadHandler();
-                var endLoadingHandler  = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+                var endLoadingHandler = cornerstoneTools.loadHandlerManager.getEndLoadHandler();
+                var errorLoadingHandler = cornerstoneTools.loadHandlerManager.getErrorLoadingHandler();
 
                 if (startLoadingHandler) {
-                    startLoadingHandler(element);
+                    startLoadingHandler(targetElement);
                 }
 
-                cornerstone.loadAndCacheImage(stackData.imageIds[newImageIdIndex]).then(function(image) {
+                var loader;
+                if (stackData.preventCache === true) {
+                    loader = cornerstone.loadImage(stackData.imageIds[newImageIdIndex]);
+                } else {
+                    loader = cornerstone.loadAndCacheImage(stackData.imageIds[newImageIdIndex]);
+                }
+
+                loader.then(function(image) {
                     var viewport = cornerstone.getViewport(targetElement);
                     stackData.currentImageIdIndex = newImageIdIndex;
                     cornerstone.displayImage(targetElement, image, viewport);
                     if (endLoadingHandler) {
-                        endLoadingHandler(element);
+                        endLoadingHandler(targetElement);
+                    }
+                }, function(error) {
+                    var imageId = stackData.imageIds[newImageIdIndex];
+                    if (errorLoadingHandler) {
+                        errorLoadingHandler(targetElement, imageId, error);
                     }
                 });
             }
@@ -88,14 +100,14 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
     }
 
     function mouseUpCallback(e, eventData) {
-        $(eventData.element).off("CornerstoneToolsMouseDrag", mouseDragCallback);
-        $(eventData.element).off("CornerstoneToolsMouseUp", mouseUpCallback);
+        $(eventData.element).off('CornerstoneToolsMouseDrag', mouseDragCallback);
+        $(eventData.element).off('CornerstoneToolsMouseUp', mouseUpCallback);
     }
 
     function mouseDownCallback(e, eventData) {
-        if(cornerstoneTools.isMouseButtonEnabled(eventData.which, e.data.mouseButtonMask)) {
-            $(eventData.element).on("CornerstoneToolsMouseDrag", mouseDragCallback);
-            $(eventData.element).on("CornerstoneToolsMouseUp", mouseUpCallback);
+        if (cornerstoneTools.isMouseButtonEnabled(eventData.which, e.data.mouseButtonMask)) {
+            $(eventData.element).on('CornerstoneToolsMouseDrag', mouseDragCallback);
+            $(eventData.element).on('CornerstoneToolsMouseUp', mouseUpCallback);
             chooseLocation(e, eventData);
             return false; // false = cases jquery to preventDefault() and stopPropagation() this event
         }
@@ -110,27 +122,74 @@ var cornerstoneTools = (function ($, cornerstone, cornerstoneTools) {
         var eventData = {
             mouseButtonMask: mouseButtonMask,
         };
+        
+        // Clear any currently existing toolData
+        var toolData = cornerstoneTools.getToolState(element, toolType);
+        toolData = [];
 
         cornerstoneTools.addToolState(element, toolType, {
-            synchronizationContext : synchronizationContext,
+            synchronizationContext: synchronizationContext,
         });
 
-        $(element).off("CornerstoneToolsMouseDown", mouseDownCallback);
+        $(element).off('CornerstoneToolsMouseDown', mouseDownCallback);
 
-        $(element).on("CornerstoneToolsMouseDown", eventData, mouseDownCallback);
+        $(element).on('CornerstoneToolsMouseDown', eventData, mouseDownCallback);
     }
 
     // disables the reference line tool for the given element
-    function disable(element, synchronizationContext) {
-        $(element).off("CornerstoneToolsMouseDown", mouseDownCallback);
+    function disable(element) {
+        $(element).off('CornerstoneToolsMouseDown', mouseDownCallback);
     }
 
     // module/private exports
     cornerstoneTools.crosshairs = {
+        activate: enable,
+        deactivate: disable,
         enable: enable,
         disable: disable
     };
 
+    function dragEndCallback(e, eventData) {
+        $(eventData.element).off('CornerstoneToolsTouchDrag', dragCallback);
+        $(eventData.element).off('CornerstoneToolsDragEnd', dragEndCallback);
+    }
 
-    return cornerstoneTools;
-}($, cornerstone, cornerstoneTools));
+    function dragStartCallback(e, eventData) {
+        $(eventData.element).on('CornerstoneToolsTouchDrag', dragCallback);
+        $(eventData.element).on('CornerstoneToolsDragEnd', dragEndCallback);
+        chooseLocation(e, eventData);
+        return false;
+    }
+
+    function dragCallback(e, eventData) {
+        chooseLocation(e, eventData);
+        return false; // false = causes jquery to preventDefault() and stopPropagation() this event
+    }
+
+    function enableTouch(element, synchronizationContext) {
+        // Clear any currently existing toolData
+        var toolData = cornerstoneTools.getToolState(element, toolType);
+        toolData = [];
+
+        cornerstoneTools.addToolState(element, toolType, {
+            synchronizationContext: synchronizationContext,
+        });
+
+        $(element).off('CornerstoneToolsTouchStart', dragStartCallback);
+
+        $(element).on('CornerstoneToolsTouchStart', dragStartCallback);
+    }
+
+    // disables the reference line tool for the given element
+    function disableTouch(element) {
+        $(element).off('CornerstoneToolsTouchStart', dragStartCallback);
+    }
+
+    cornerstoneTools.crosshairsTouch = {
+        activate: enableTouch,
+        deactivate: disableTouch,
+        enable: enableTouch,
+        disable: disableTouch
+    };
+
+})($, cornerstone, cornerstoneTools);
